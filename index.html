@@ -6,166 +6,8 @@
 <title>対人分析プロフィール</title>
 <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <style>
   html, body { margin: 0; padding: 0; }
-</style>
-</head>
-<body>
-<div id="root"></div>
-<script type="text/babel" data-presets="env,react" data-type="script">
-
-const { useState } = React;
-
-const balanceItems = [
-  { id: "concrete_abstract", category: "認知", left: "具体", right: "抽象" },
-  { id: "optimism_pessimism", category: "認知", left: "楽観", right: "悲観" },
-  { id: "emotion_logic", category: "欲求", left: "感情", right: "理屈" },
-  { id: "stimulus_safety", category: "欲求", left: "刺激", right: "安心" },
-  { id: "dominance", category: "対人関係", left: "支配", right: "被支配" },
-  { id: "dependence", category: "対人関係", left: "依存", right: "自立" },
-  { id: "goal_avoid", category: "動機", left: "目的志向", right: "問題回避" },
-  { id: "real_ideal", category: "動機", left: "現実", right: "理想" },
-  { id: "freedom", category: "適正環境", left: "自由", right: "不自由" },
-];
-
-const matrixGroups = [
-  { id: "desire_matrix", category: "欲求", title: "所属意識 × 承認欲求", xLabel: "所属意識", yLabel: "承認欲求" },
-  { id: "interpersonal_matrix", category: "対人関係", title: "積極性 × 孤独耐性", xLabel: "積極性", yLabel: "孤独耐性" },
-];
-
-const categoryColors = {
-  認知: "#5B6B73",
-  欲求: "#8B5E4A",
-  対人関係: "#3D4F5C",
-  動機: "#6B5B4A",
-  適正環境: "#4A6B5E",
-};
-
-function BalanceSlider({ item, value, onChange }) {
-  const color = categoryColors[item.category];
-  return (
-    <div className="balance-row">
-      <div className="balance-labels">
-        <span className="balance-label" style={{ color, fontWeight: value <= 50 ? 700 : 400, opacity: value <= 50 ? 1 : 0.5 }}>
-          {item.left}
-        </span>
-        <span className="balance-ratio">{100 - value} : {value}</span>
-        <span className="balance-label" style={{ color, fontWeight: value > 50 ? 700 : 400, opacity: value > 50 ? 1 : 0.5 }}>
-          {item.right}
-        </span>
-      </div>
-      <div className="balance-track-wrap">
-        <input
-          type="range"
-          min="0"
-          max="100"
-          value={value}
-          onChange={(e) => onChange(item.id, Number(e.target.value))}
-          className="balance-slider"
-          style={{ "--track-color": color }}
-        />
-      </div>
-    </div>
-  );
-}
-
-function MatrixPad({ group, x, y, onChange }) {
-  const color = categoryColors[group.category];
-  const size = 220;
-  const px = (x / 100) * size;
-  const py = size - (y / 100) * size;
-
-  const handlePad = (e) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const nx = Math.min(100, Math.max(0, ((e.clientX - rect.left) / rect.width) * 100));
-    const ny = Math.min(100, Math.max(0, 100 - ((e.clientY - rect.top) / rect.height) * 100));
-    onChange(group.id, Math.round(nx), Math.round(ny));
-  };
-
-  return (
-    <div className="matrix-block">
-      <div className="matrix-title" style={{ color }}>{group.title}</div>
-      <div className="matrix-area">
-        <div className="matrix-ylabel">{group.yLabel} 強</div>
-        <div
-          className="matrix-pad"
-          style={{ width: size, height: size, borderColor: color + "55" }}
-          onMouseDown={(e) => {
-            handlePad(e);
-            const move = (ev) => handlePad(ev);
-            const up = () => {
-              window.removeEventListener("mousemove", move);
-              window.removeEventListener("mouseup", up);
-            };
-            window.addEventListener("mousemove", move);
-            window.addEventListener("mouseup", up);
-          }}
-        >
-          <div className="matrix-gridline matrix-gridline-h" />
-          <div className="matrix-gridline matrix-gridline-v" />
-          <div className="matrix-dot" style={{ left: px, top: py, background: color, boxShadow: `0 0 0 4px ${color}22` }} />
-        </div>
-        <div className="matrix-ylabel matrix-ylabel-bottom">{group.yLabel} 弱</div>
-      </div>
-      <div className="matrix-xlabels">
-        <span>{group.xLabel} 弱</span>
-        <span>{group.xLabel} 強</span>
-      </div>
-      <div className="matrix-readout" style={{ color }}>
-        {group.xLabel} {x} ／ {group.yLabel} {y}
-      </div>
-    </div>
-  );
-}
-
-function InterpersonalProfile() {
-  const [balances, setBalances] = useState(Object.fromEntries(balanceItems.map((i) => [i.id, 50])));
-  const [matrices, setMatrices] = useState(Object.fromEntries(matrixGroups.map((g) => [g.id, { x: 50, y: 50 }])));
-
-  const updateBalance = (id, value) => setBalances((prev) => ({ ...prev, [id]: value }));
-  const updateMatrix = (id, x, y) => setMatrices((prev) => ({ ...prev, [id]: { x, y } }));
-
-  const categories = ["認知", "欲求", "対人関係", "動機", "適正環境"];
-
-  return (
-    <div className="profile-root">
-      <div className="profile-header">
-        <h1>対人分析プロフィール</h1>
-        <p>各項目のスライダーとパッドを操作して、自分自身、または分析したい人物のプロフィールを組み立てます。二極項目は左右の優位度を割合で、2軸項目は座標の位置で表します。</p>
-      </div>
-
-      {categories.map((cat) => {
-        const items = balanceItems.filter((i) => i.category === cat);
-        const groups = matrixGroups.filter((g) => g.category === cat);
-        if (items.length === 0 && groups.length === 0) return null;
-        return (
-          <div className="category-section" key={cat}>
-            <div className="category-title" style={{ color: categoryColors[cat] }}>
-              <span className="category-dot" style={{ background: categoryColors[cat] }} />
-              {cat}
-            </div>
-            {items.map((item) => (
-              <BalanceSlider key={item.id} item={item} value={balances[item.id]} onChange={updateBalance} />
-            ))}
-            {groups.length > 0 && (
-              <div className="matrix-grid-wrap">
-                {groups.map((g) => (
-                  <MatrixPad key={g.id} group={g} x={matrices[g.id].x} y={matrices[g.id].y} onChange={updateMatrix} />
-                ))}
-              </div>
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-ReactDOM.createRoot(document.getElementById("root")).render(<InterpersonalProfile />);
-</script>
-
-<style>
   .profile-root {
     font-family: "Hiragino Mincho ProN", "Noto Serif JP", serif;
     background: #FAF8F4;
@@ -202,5 +44,243 @@ ReactDOM.createRoot(document.getElementById("root")).render(<InterpersonalProfil
   .matrix-xlabels { display: flex; justify-content: space-between; width: 220px; font-size: 11px; color: #948C80; margin-top: 4px; }
   .matrix-readout { font-size: 12px; margin-top: 10px; font-weight: 600; }
 </style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const {
+  useState
+} = React;
+const balanceItems = [{
+  id: "concrete_abstract",
+  category: "認知",
+  left: "具体",
+  right: "抽象"
+}, {
+  id: "optimism_pessimism",
+  category: "認知",
+  left: "楽観",
+  right: "悲観"
+}, {
+  id: "emotion_logic",
+  category: "欲求",
+  left: "感情",
+  right: "理屈"
+}, {
+  id: "stimulus_safety",
+  category: "欲求",
+  left: "刺激",
+  right: "安心"
+}, {
+  id: "dominance",
+  category: "対人関係",
+  left: "支配",
+  right: "被支配"
+}, {
+  id: "dependence",
+  category: "対人関係",
+  left: "依存",
+  right: "自立"
+}, {
+  id: "goal_avoid",
+  category: "動機",
+  left: "目的志向",
+  right: "問題回避"
+}, {
+  id: "real_ideal",
+  category: "動機",
+  left: "現実",
+  right: "理想"
+}, {
+  id: "freedom",
+  category: "適正環境",
+  left: "自由",
+  right: "不自由"
+}];
+const matrixGroups = [{
+  id: "desire_matrix",
+  category: "欲求",
+  title: "所属意識 × 承認欲求",
+  xLabel: "所属意識",
+  yLabel: "承認欲求"
+}, {
+  id: "interpersonal_matrix",
+  category: "対人関係",
+  title: "積極性 × 孤独耐性",
+  xLabel: "積極性",
+  yLabel: "孤独耐性"
+}];
+const categoryColors = {
+  認知: "#5B6B73",
+  欲求: "#8B5E4A",
+  対人関係: "#3D4F5C",
+  動機: "#6B5B4A",
+  適正環境: "#4A6B5E"
+};
+function BalanceSlider({
+  item,
+  value,
+  onChange
+}) {
+  const color = categoryColors[item.category];
+  return /*#__PURE__*/React.createElement("div", {
+    className: "balance-row"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "balance-labels"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "balance-label",
+    style: {
+      color,
+      fontWeight: value <= 50 ? 700 : 400,
+      opacity: value <= 50 ? 1 : 0.5
+    }
+  }, item.left), /*#__PURE__*/React.createElement("span", {
+    className: "balance-ratio"
+  }, 100 - value, " : ", value), /*#__PURE__*/React.createElement("span", {
+    className: "balance-label",
+    style: {
+      color,
+      fontWeight: value > 50 ? 700 : 400,
+      opacity: value > 50 ? 1 : 0.5
+    }
+  }, item.right)), /*#__PURE__*/React.createElement("div", {
+    className: "balance-track-wrap"
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "range",
+    min: "0",
+    max: "100",
+    value: value,
+    onChange: e => onChange(item.id, Number(e.target.value)),
+    className: "balance-slider",
+    style: {
+      "--track-color": color
+    }
+  })));
+}
+function MatrixPad({
+  group,
+  x,
+  y,
+  onChange
+}) {
+  const color = categoryColors[group.category];
+  const size = 220;
+  const px = x / 100 * size;
+  const py = size - y / 100 * size;
+  const handlePad = e => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const nx = Math.min(100, Math.max(0, (e.clientX - rect.left) / rect.width * 100));
+    const ny = Math.min(100, Math.max(0, 100 - (e.clientY - rect.top) / rect.height * 100));
+    onChange(group.id, Math.round(nx), Math.round(ny));
+  };
+  return /*#__PURE__*/React.createElement("div", {
+    className: "matrix-block"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "matrix-title",
+    style: {
+      color
+    }
+  }, group.title), /*#__PURE__*/React.createElement("div", {
+    className: "matrix-area"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "matrix-ylabel"
+  }, group.yLabel, " 強"), /*#__PURE__*/React.createElement("div", {
+    className: "matrix-pad",
+    style: {
+      width: size,
+      height: size,
+      borderColor: color + "55"
+    },
+    onMouseDown: e => {
+      handlePad(e);
+      const move = ev => handlePad(ev);
+      const up = () => {
+        window.removeEventListener("mousemove", move);
+        window.removeEventListener("mouseup", up);
+      };
+      window.addEventListener("mousemove", move);
+      window.addEventListener("mouseup", up);
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "matrix-gridline matrix-gridline-h"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "matrix-gridline matrix-gridline-v"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "matrix-dot",
+    style: {
+      left: px,
+      top: py,
+      background: color,
+      boxShadow: `0 0 0 4px ${color}22`
+    }
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "matrix-ylabel matrix-ylabel-bottom"
+  }, group.yLabel, " 弱")), /*#__PURE__*/React.createElement("div", {
+    className: "matrix-xlabels"
+  }, /*#__PURE__*/React.createElement("span", null, group.xLabel, " 弱"), /*#__PURE__*/React.createElement("span", null, group.xLabel, " 強")), /*#__PURE__*/React.createElement("div", {
+    className: "matrix-readout",
+    style: {
+      color
+    }
+  }, group.xLabel, " ", x, " ／ ", group.yLabel, " ", y));
+}
+function InterpersonalProfile() {
+  const [balances, setBalances] = useState(Object.fromEntries(balanceItems.map(i => [i.id, 50])));
+  const [matrices, setMatrices] = useState(Object.fromEntries(matrixGroups.map(g => [g.id, {
+    x: 50,
+    y: 50
+  }])));
+  const updateBalance = (id, value) => setBalances(prev => ({
+    ...prev,
+    [id]: value
+  }));
+  const updateMatrix = (id, x, y) => setMatrices(prev => ({
+    ...prev,
+    [id]: {
+      x,
+      y
+    }
+  }));
+  const categories = ["認知", "欲求", "対人関係", "動機", "適正環境"];
+  return /*#__PURE__*/React.createElement("div", {
+    className: "profile-root"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "profile-header"
+  }, /*#__PURE__*/React.createElement("h1", null, "対人分析プロフィール"), /*#__PURE__*/React.createElement("p", null, "各項目のスライダーとパッドを操作して、自分自身、または分析したい人物のプロフィールを組み立てます。二極項目は左右の優位度を割合で、2軸項目は座標の位置で表します。")), categories.map(cat => {
+    const items = balanceItems.filter(i => i.category === cat);
+    const groups = matrixGroups.filter(g => g.category === cat);
+    if (items.length === 0 && groups.length === 0) return null;
+    return /*#__PURE__*/React.createElement("div", {
+      className: "category-section",
+      key: cat
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "category-title",
+      style: {
+        color: categoryColors[cat]
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "category-dot",
+      style: {
+        background: categoryColors[cat]
+      }
+    }), cat), items.map(item => /*#__PURE__*/React.createElement(BalanceSlider, {
+      key: item.id,
+      item: item,
+      value: balances[item.id],
+      onChange: updateBalance
+    })), groups.length > 0 && /*#__PURE__*/React.createElement("div", {
+      className: "matrix-grid-wrap"
+    }, groups.map(g => /*#__PURE__*/React.createElement(MatrixPad, {
+      key: g.id,
+      group: g,
+      x: matrices[g.id].x,
+      y: matrices[g.id].y,
+      onChange: updateMatrix
+    }))));
+  }));
+}
+ReactDOM.createRoot(document.getElementById("root")).render(/*#__PURE__*/React.createElement(InterpersonalProfile, null));
+
+</script>
 </body>
 </html>
