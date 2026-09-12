@@ -4,283 +4,265 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>対人分析プロフィール</title>
-<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <style>
+  * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
-  .profile-root {
+  body {
     font-family: "Hiragino Mincho ProN", "Noto Serif JP", serif;
     background: #FAF8F4;
     color: #2A2826;
     min-height: 100vh;
     padding: 48px 24px 80px;
-    box-sizing: border-box;
   }
   .profile-header { max-width: 780px; margin: 0 auto 56px; }
   .profile-header h1 { font-size: 28px; font-weight: 600; letter-spacing: 0.02em; margin: 0 0 8px; }
   .profile-header p { font-family: "Hiragino Sans", "Noto Sans JP", sans-serif; font-size: 13px; color: #6B655E; margin: 0; line-height: 1.7; }
+
   .category-section { max-width: 780px; margin: 0 auto 48px; border-top: 1px solid #E4DED2; padding-top: 24px; }
-  .category-title { font-family: "Hiragino Sans", "Noto Sans JP", sans-serif; font-size: 12px; letter-spacing: 0.15em; margin: 0 0 20px; display: flex; align-items: center; gap: 10px; }
+  .category-title {
+    font-family: "Hiragino Sans", "Noto Sans JP", sans-serif;
+    font-size: 12px; letter-spacing: 0.15em; margin: 0 0 20px;
+    display: flex; align-items: center; gap: 10px;
+  }
   .category-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
   .balance-row { margin-bottom: 22px; }
-  .balance-labels { display: flex; justify-content: space-between; align-items: baseline; font-family: "Hiragino Sans", "Noto Sans JP", sans-serif; font-size: 14px; margin-bottom: 6px; }
-  .balance-label { min-width: 64px; transition: opacity 0.2s, font-weight 0.2s; }
+  .balance-labels {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-family: "Hiragino Sans", "Noto Sans JP", sans-serif; font-size: 14px; margin-bottom: 6px;
+  }
+  .balance-label { min-width: 64px; transition: opacity 0.2s, font-weight 0.2s; opacity: 0.5; }
+  .balance-label.active { font-weight: 700; opacity: 1; }
   .balance-label:last-child { text-align: right; }
   .balance-ratio { font-size: 12px; color: #948C80; font-variant-numeric: tabular-nums; }
-  .balance-slider { -webkit-appearance: none; appearance: none; width: 100%; height: 3px; border-radius: 2px; background: #E4DED2; outline: none; margin: 0; }
-  .balance-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--track-color); cursor: pointer; border: 2px solid #FAF8F4; box-shadow: 0 0 0 1px var(--track-color); }
-  .balance-slider::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: var(--track-color); cursor: pointer; border: 2px solid #FAF8F4; box-shadow: 0 0 0 1px var(--track-color); }
+
+  .balance-slider {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; height: 3px; border-radius: 2px;
+    background: #E4DED2; outline: none; margin: 0;
+  }
+  .balance-slider::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: var(--track-color); cursor: pointer;
+    border: 2px solid #FAF8F4; box-shadow: 0 0 0 1px var(--track-color);
+  }
+  .balance-slider::-moz-range-thumb {
+    width: 16px; height: 16px; border-radius: 50%;
+    background: var(--track-color); cursor: pointer;
+    border: 2px solid #FAF8F4; box-shadow: 0 0 0 1px var(--track-color);
+  }
+
   .matrix-grid-wrap { display: flex; gap: 48px; flex-wrap: wrap; }
   .matrix-block { font-family: "Hiragino Sans", "Noto Sans JP", sans-serif; }
   .matrix-title { font-size: 14px; margin-bottom: 14px; font-weight: 600; }
   .matrix-area { display: flex; flex-direction: column; align-items: center; }
   .matrix-ylabel { font-size: 11px; color: #948C80; margin: 0 0 6px; }
   .matrix-ylabel-bottom { margin: 6px 0 0; }
-  .matrix-pad { position: relative; border: 1px solid; background: #FFFDF9; cursor: crosshair; border-radius: 4px; }
+  .matrix-pad {
+    position: relative; width: 220px; height: 220px;
+    border: 1px solid; background: #FFFDF9; cursor: crosshair; border-radius: 4px;
+  }
   .matrix-gridline { position: absolute; background: #E4DED2; }
   .matrix-gridline-h { left: 0; right: 0; top: 50%; height: 1px; }
   .matrix-gridline-v { top: 0; bottom: 0; left: 50%; width: 1px; }
-  .matrix-dot { position: absolute; width: 14px; height: 14px; border-radius: 50%; transform: translate(-50%, -50%); transition: left 0.05s, top 0.05s; }
-  .matrix-xlabels { display: flex; justify-content: space-between; width: 220px; font-size: 11px; color: #948C80; margin-top: 4px; }
+  .matrix-dot {
+    position: absolute; width: 14px; height: 14px; border-radius: 50%;
+    transform: translate(-50%, -50%); transition: left 0.05s, top 0.05s;
+  }
+  .matrix-xlabels {
+    display: flex; justify-content: space-between; width: 220px;
+    font-size: 11px; color: #948C80; margin-top: 4px;
+  }
   .matrix-readout { font-size: 12px; margin-top: 10px; font-weight: 600; }
 </style>
 </head>
 <body>
-<div id="root"></div>
+
+<div class="profile-header">
+  <h1>対人分析プロフィール</h1>
+  <p>各項目のスライダーとパッドを操作して、自分自身、または分析したい人物のプロフィールを組み立てます。二極項目は左右の優位度を割合で、2軸項目は座標の位置で表します。</p>
+</div>
+
+<div id="app"></div>
+
 <script>
-const {
-  useState
-} = React;
-const balanceItems = [{
-  id: "concrete_abstract",
-  category: "認知",
-  left: "具体",
-  right: "抽象"
-}, {
-  id: "optimism_pessimism",
-  category: "認知",
-  left: "楽観",
-  right: "悲観"
-}, {
-  id: "emotion_logic",
-  category: "欲求",
-  left: "感情",
-  right: "理屈"
-}, {
-  id: "stimulus_safety",
-  category: "欲求",
-  left: "刺激",
-  right: "安心"
-}, {
-  id: "dominance",
-  category: "対人関係",
-  left: "支配",
-  right: "被支配"
-}, {
-  id: "dependence",
-  category: "対人関係",
-  left: "依存",
-  right: "自立"
-}, {
-  id: "goal_avoid",
-  category: "動機",
-  left: "目的志向",
-  right: "問題回避"
-}, {
-  id: "real_ideal",
-  category: "動機",
-  left: "現実",
-  right: "理想"
-}, {
-  id: "freedom",
-  category: "適正環境",
-  left: "自由",
-  right: "不自由"
-}];
-const matrixGroups = [{
-  id: "desire_matrix",
-  category: "欲求",
-  title: "所属意識 × 承認欲求",
-  xLabel: "所属意識",
-  yLabel: "承認欲求"
-}, {
-  id: "interpersonal_matrix",
-  category: "対人関係",
-  title: "積極性 × 孤独耐性",
-  xLabel: "積極性",
-  yLabel: "孤独耐性"
-}];
-const categoryColors = {
-  認知: "#5B6B73",
-  欲求: "#8B5E4A",
-  対人関係: "#3D4F5C",
-  動機: "#6B5B4A",
-  適正環境: "#4A6B5E"
-};
-function BalanceSlider({
-  item,
-  value,
-  onChange
-}) {
-  const color = categoryColors[item.category];
-  return /*#__PURE__*/React.createElement("div", {
-    className: "balance-row"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "balance-labels"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "balance-label",
-    style: {
-      color,
-      fontWeight: value <= 50 ? 700 : 400,
-      opacity: value <= 50 ? 1 : 0.5
-    }
-  }, item.left), /*#__PURE__*/React.createElement("span", {
-    className: "balance-ratio"
-  }, 100 - value, " : ", value), /*#__PURE__*/React.createElement("span", {
-    className: "balance-label",
-    style: {
-      color,
-      fontWeight: value > 50 ? 700 : 400,
-      opacity: value > 50 ? 1 : 0.5
-    }
-  }, item.right)), /*#__PURE__*/React.createElement("div", {
-    className: "balance-track-wrap"
-  }, /*#__PURE__*/React.createElement("input", {
-    type: "range",
-    min: "0",
-    max: "100",
-    value: value,
-    onChange: e => onChange(item.id, Number(e.target.value)),
-    className: "balance-slider",
-    style: {
-      "--track-color": color
-    }
-  })));
-}
-function MatrixPad({
-  group,
-  x,
-  y,
-  onChange
-}) {
-  const color = categoryColors[group.category];
-  const size = 220;
-  const px = x / 100 * size;
-  const py = size - y / 100 * size;
-  const handlePad = e => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const nx = Math.min(100, Math.max(0, (e.clientX - rect.left) / rect.width * 100));
-    const ny = Math.min(100, Math.max(0, 100 - (e.clientY - rect.top) / rect.height * 100));
-    onChange(group.id, Math.round(nx), Math.round(ny));
+(function () {
+  var balanceItems = [
+    { id: "concrete_abstract", category: "認知", left: "具体", right: "抽象" },
+    { id: "optimism_pessimism", category: "認知", left: "楽観", right: "悲観" },
+    { id: "emotion_logic", category: "欲求", left: "感情", right: "理屈" },
+    { id: "stimulus_safety", category: "欲求", left: "刺激", right: "安心" },
+    { id: "dominance", category: "対人関係", left: "支配", right: "被支配" },
+    { id: "dependence", category: "対人関係", left: "依存", right: "自立" },
+    { id: "goal_avoid", category: "動機", left: "目的志向", right: "問題回避" },
+    { id: "real_ideal", category: "動機", left: "現実", right: "理想" },
+    { id: "freedom", category: "適正環境", left: "自由", right: "不自由" }
+  ];
+
+  var matrixGroups = [
+    { id: "desire_matrix", category: "欲求", title: "所属意識 × 承認欲求", xLabel: "所属意識", yLabel: "承認欲求" },
+    { id: "interpersonal_matrix", category: "対人関係", title: "積極性 × 孤独耐性", xLabel: "積極性", yLabel: "孤独耐性" }
+  ];
+
+  var categoryColors = {
+    "認知": "#5B6B73",
+    "欲求": "#8B5E4A",
+    "対人関係": "#3D4F5C",
+    "動機": "#6B5B4A",
+    "適正環境": "#4A6B5E"
   };
-  return /*#__PURE__*/React.createElement("div", {
-    className: "matrix-block"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "matrix-title",
-    style: {
-      color
+
+  var categories = ["認知", "欲求", "対人関係", "動機", "適正環境"];
+
+  var balanceState = {};
+  balanceItems.forEach(function (item) { balanceState[item.id] = 50; });
+
+  var matrixState = {};
+  matrixGroups.forEach(function (g) { matrixState[g.id] = { x: 50, y: 50 }; });
+
+  var app = document.getElementById("app");
+
+  function el(tag, attrs, children) {
+    var e = document.createElement(tag);
+    if (attrs) {
+      Object.keys(attrs).forEach(function (k) {
+        if (k === "style") {
+          Object.assign(e.style, attrs[k]);
+        } else if (k.indexOf("on") === 0 && typeof attrs[k] === "function") {
+          e.addEventListener(k.slice(2).toLowerCase(), attrs[k]);
+        } else if (k === "className") {
+          e.className = attrs[k];
+        } else {
+          e.setAttribute(k, attrs[k]);
+        }
+      });
     }
-  }, group.title), /*#__PURE__*/React.createElement("div", {
-    className: "matrix-area"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "matrix-ylabel"
-  }, group.yLabel, " 強"), /*#__PURE__*/React.createElement("div", {
-    className: "matrix-pad",
-    style: {
-      width: size,
-      height: size,
-      borderColor: color + "55"
-    },
-    onMouseDown: e => {
+    (children || []).forEach(function (c) {
+      if (typeof c === "string") {
+        e.appendChild(document.createTextNode(c));
+      } else if (c) {
+        e.appendChild(c);
+      }
+    });
+    return e;
+  }
+
+  function renderBalanceRow(item) {
+    var color = categoryColors[item.category];
+    var value = balanceState[item.id];
+
+    var leftLabel = el("span", { className: "balance-label" + (value <= 50 ? " active" : ""), style: { color: color } }, [item.left]);
+    var ratio = el("span", { className: "balance-ratio" }, [(100 - value) + " : " + value]);
+    var rightLabel = el("span", { className: "balance-label" + (value > 50 ? " active" : ""), style: { color: color } }, [item.right]);
+
+    var labels = el("div", { className: "balance-labels" }, [leftLabel, ratio, rightLabel]);
+
+    var slider = el("input", {
+      type: "range", min: "0", max: "100", value: String(value),
+      className: "balance-slider",
+      style: { "--track-color": color }
+    });
+    slider.addEventListener("input", function (e) {
+      balanceState[item.id] = Number(e.target.value);
+      leftLabel.className = "balance-label" + (balanceState[item.id] <= 50 ? " active" : "");
+      rightLabel.className = "balance-label" + (balanceState[item.id] > 50 ? " active" : "");
+      ratio.textContent = (100 - balanceState[item.id]) + " : " + balanceState[item.id];
+    });
+
+    var trackWrap = el("div", { className: "balance-track-wrap" }, [slider]);
+    return el("div", { className: "balance-row" }, [labels, trackWrap]);
+  }
+
+  function renderMatrixPad(group) {
+    var color = categoryColors[group.category];
+    var size = 220;
+    var state = matrixState[group.id];
+
+    var dot = el("div", { className: "matrix-dot" });
+    function updateDotPosition() {
+      var px = (state.x / 100) * size;
+      var py = size - (state.y / 100) * size;
+      dot.style.left = px + "px";
+      dot.style.top = py + "px";
+      dot.style.background = color;
+      dot.style.boxShadow = "0 0 0 4px " + color + "22";
+    }
+    updateDotPosition();
+
+    var readout = el("div", { className: "matrix-readout", style: { color: color } });
+    function updateReadout() {
+      readout.textContent = group.xLabel + " " + state.x + " ／ " + group.yLabel + " " + state.y;
+    }
+    updateReadout();
+
+    var gridH = el("div", { className: "matrix-gridline matrix-gridline-h" });
+    var gridV = el("div", { className: "matrix-gridline matrix-gridline-v" });
+
+    var pad = el("div", {
+      className: "matrix-pad",
+      style: { borderColor: color + "55" }
+    }, [gridH, gridV, dot]);
+
+    function handlePad(e) {
+      var rect = pad.getBoundingClientRect();
+      var nx = Math.min(100, Math.max(0, ((e.clientX - rect.left) / rect.width) * 100));
+      var ny = Math.min(100, Math.max(0, 100 - ((e.clientY - rect.top) / rect.height) * 100));
+      state.x = Math.round(nx);
+      state.y = Math.round(ny);
+      updateDotPosition();
+      updateReadout();
+    }
+
+    pad.addEventListener("mousedown", function (e) {
       handlePad(e);
-      const move = ev => handlePad(ev);
-      const up = () => {
+      function move(ev) { handlePad(ev); }
+      function up() {
         window.removeEventListener("mousemove", move);
         window.removeEventListener("mouseup", up);
-      };
+      }
       window.addEventListener("mousemove", move);
       window.addEventListener("mouseup", up);
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "matrix-gridline matrix-gridline-h"
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "matrix-gridline matrix-gridline-v"
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "matrix-dot",
-    style: {
-      left: px,
-      top: py,
-      background: color,
-      boxShadow: `0 0 0 4px ${color}22`
-    }
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "matrix-ylabel matrix-ylabel-bottom"
-  }, group.yLabel, " 弱")), /*#__PURE__*/React.createElement("div", {
-    className: "matrix-xlabels"
-  }, /*#__PURE__*/React.createElement("span", null, group.xLabel, " 弱"), /*#__PURE__*/React.createElement("span", null, group.xLabel, " 強")), /*#__PURE__*/React.createElement("div", {
-    className: "matrix-readout",
-    style: {
-      color
-    }
-  }, group.xLabel, " ", x, " ／ ", group.yLabel, " ", y));
-}
-function InterpersonalProfile() {
-  const [balances, setBalances] = useState(Object.fromEntries(balanceItems.map(i => [i.id, 50])));
-  const [matrices, setMatrices] = useState(Object.fromEntries(matrixGroups.map(g => [g.id, {
-    x: 50,
-    y: 50
-  }])));
-  const updateBalance = (id, value) => setBalances(prev => ({
-    ...prev,
-    [id]: value
-  }));
-  const updateMatrix = (id, x, y) => setMatrices(prev => ({
-    ...prev,
-    [id]: {
-      x,
-      y
-    }
-  }));
-  const categories = ["認知", "欲求", "対人関係", "動機", "適正環境"];
-  return /*#__PURE__*/React.createElement("div", {
-    className: "profile-root"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "profile-header"
-  }, /*#__PURE__*/React.createElement("h1", null, "対人分析プロフィール"), /*#__PURE__*/React.createElement("p", null, "各項目のスライダーとパッドを操作して、自分自身、または分析したい人物のプロフィールを組み立てます。二極項目は左右の優位度を割合で、2軸項目は座標の位置で表します。")), categories.map(cat => {
-    const items = balanceItems.filter(i => i.category === cat);
-    const groups = matrixGroups.filter(g => g.category === cat);
-    if (items.length === 0 && groups.length === 0) return null;
-    return /*#__PURE__*/React.createElement("div", {
-      className: "category-section",
-      key: cat
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "category-title",
-      style: {
-        color: categoryColors[cat]
-      }
-    }, /*#__PURE__*/React.createElement("span", {
-      className: "category-dot",
-      style: {
-        background: categoryColors[cat]
-      }
-    }), cat), items.map(item => /*#__PURE__*/React.createElement(BalanceSlider, {
-      key: item.id,
-      item: item,
-      value: balances[item.id],
-      onChange: updateBalance
-    })), groups.length > 0 && /*#__PURE__*/React.createElement("div", {
-      className: "matrix-grid-wrap"
-    }, groups.map(g => /*#__PURE__*/React.createElement(MatrixPad, {
-      key: g.id,
-      group: g,
-      x: matrices[g.id].x,
-      y: matrices[g.id].y,
-      onChange: updateMatrix
-    }))));
-  }));
-}
-ReactDOM.createRoot(document.getElementById("root")).render(/*#__PURE__*/React.createElement(InterpersonalProfile, null));
+    });
 
+    var title = el("div", { className: "matrix-title", style: { color: color } }, [group.title]);
+    var yTop = el("div", { className: "matrix-ylabel" }, [group.yLabel + " 強"]);
+    var yBottom = el("div", { className: "matrix-ylabel matrix-ylabel-bottom" }, [group.yLabel + " 弱"]);
+    var area = el("div", { className: "matrix-area" }, [yTop, pad, yBottom]);
+    var xLabels = el("div", { className: "matrix-xlabels" }, [
+      el("span", null, [group.xLabel + " 弱"]),
+      el("span", null, [group.xLabel + " 強"])
+    ]);
+
+    return el("div", { className: "matrix-block" }, [title, area, xLabels, readout]);
+  }
+
+  categories.forEach(function (cat) {
+    var items = balanceItems.filter(function (i) { return i.category === cat; });
+    var groups = matrixGroups.filter(function (g) { return g.category === cat; });
+    if (items.length === 0 && groups.length === 0) return;
+
+    var dot = el("span", { className: "category-dot", style: { background: categoryColors[cat] } });
+    var title = el("div", { className: "category-title", style: { color: categoryColors[cat] } }, [dot, cat]);
+
+    var section = el("div", { className: "category-section" }, [title]);
+
+    items.forEach(function (item) {
+      section.appendChild(renderBalanceRow(item));
+    });
+
+    if (groups.length > 0) {
+      var gridWrap = el("div", { className: "matrix-grid-wrap" });
+      groups.forEach(function (g) {
+        gridWrap.appendChild(renderMatrixPad(g));
+      });
+      section.appendChild(gridWrap);
+    }
+
+    app.appendChild(section);
+  });
+})();
 </script>
+
 </body>
 </html>
